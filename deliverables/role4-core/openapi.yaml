@@ -1,0 +1,660 @@
+openapi: 3.0.3
+info:
+  title: EGE-Flow API
+  version: 0.1.0
+  description: |
+    Описание REST API по таблице эндпоинтов из ТЗ (п. 4.1.2). Это только описание, реализации нет.
+
+    Методы, пути и коды ошибок взяты из ТЗ. Форма запросов и ответов в ТЗ почти не описана,
+    поэтому названия полей выбраны по сущностям из п. 4.3.2. Всё, чего нет в ТЗ, помечено
+    `ПРЕДЛОЖЕНИЕ` в описании или полем `x-proposal: true`. Такие места нужно утвердить
+    и внести в ТЗ дополнением (п. 1.8) или убрать.
+
+    Сюда не входит WebSocket `/ws/game/sessions/{id}`: OpenAPI его не описывает, см. раздел
+    «WebSocket» в конце файла.
+servers:
+  - url: http://localhost:8000/api/v1
+    description: локальная разработка
+  - url: https://api.ege-flow.ru/api/v1
+    description: предполагаемый адрес рабочей среды
+
+tags:
+  - name: Предметы и темы
+  - name: Попытки
+  - name: Карточки
+  - name: Игра
+  - name: Статистика
+  - name: Служебные
+  - name: Пользователь (предложение)
+
+security:
+  - bearerAuth: []
+
+paths:
+  /subjects:
+    get:
+      tags: [Предметы и темы]
+      summary: Список предметов (FR-020)
+      responses:
+        "200":
+          description: Список предметов
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Subject" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /subjects/{id}/topics:
+    get:
+      tags: [Предметы и темы]
+      summary: Темы предмета (FR-021)
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Список тем
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Topic" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /topics/{id}/attempts:
+    post:
+      tags: [Попытки]
+      summary: Тренировка по теме (FR-035)
+      description: Собирает вариант вида TOPIC и создаёт попытку. По умолчанию 10 заданий.
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                count:
+                  type: integer
+                  minimum: 1
+                  default: 10
+                  description: Сколько заданий взять
+      responses:
+        "201":
+          description: Попытка создана
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Attempt" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: В теме нет заданий
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /subjects/{id}/attempts:
+    post:
+      tags: [Попытки]
+      summary: Вариант ЕГЭ (FR-036)
+      description: Собирает вариант вида EXAM по структуре варианта предмета и создаёт попытку.
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "201":
+          description: Попытка создана
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Attempt" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: У предмета нет структуры варианта или для какого-то номера нет заданий
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /attempts/{id}:
+    get:
+      tags: [Попытки]
+      summary: Попытка (FR-030, FR-038, FR-039)
+      description: |
+        Пока попытка не завершена, в заданиях нет полей `correct_answer`, `is_correct`
+        и `points_awarded`. После завершения они есть, а также баллы и процент.
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Попытка с заданиями и ответами
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Attempt" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /questions/{id}/answers:
+    post:
+      tags: [Попытки]
+      summary: Сохранить или отправить ответ (FR-031 — FR-033)
+      description: |
+        Статус `DRAFT` — автосохранение, `SAVED` — кнопка «Сохранить», `FINAL` — «Отправить ответ».
+        Правильность клиент не передаёт и в ответе не получает (NFR-050, FR-033).
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AnswerIn" }
+      responses:
+        "200":
+          description: Ответ сохранён
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AnswerSaved" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: |
+            Ответ уже отправлен (FINAL), повторная отправка запрещена (FR-033).
+            ПРЕДЛОЖЕНИЕ: тот же код, если попытка уже завершена.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /attempts/{id}/finish:
+    post:
+      tags: [Попытки]
+      summary: Завершить попытку (FR-034)
+      description: |
+        Ответы DRAFT и SAVED становятся FINAL и проверяются, считаются первичные баллы
+        и процент. В ответе — полная попытка с результатом.
+        ПРЕДЛОЖЕНИЕ: повторное завершение возвращает 409.
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Попытка завершена
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Attempt" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: Попытка уже завершена (ПРЕДЛОЖЕНИЕ)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /users/me/attempts:
+    get:
+      tags: [Попытки]
+      summary: История попыток (FR-061)
+      description: В списке есть и незавершённые попытки (`finished_at` пусто), чтобы к ним можно было вернуться (FR-038).
+      responses:
+        "200":
+          description: Список попыток, новые сверху
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AttemptSummary" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /topics/{id}/flashcards:
+    get:
+      tags: [Карточки]
+      summary: Карточки темы (FR-040)
+      description: Сначала карточки, срок повторения которых наступил, затем новые.
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Карточки
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FlashcardList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /flashcards/{id}/progress:
+    post:
+      tags: [Карточки]
+      summary: Оценить карточку (FR-042, FR-043)
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [knows]
+              properties:
+                knows:
+                  type: boolean
+                  description: true — «Знаю», false — «Не знаю»
+      responses:
+        "200":
+          description: Прогресс обновлён
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FlashcardProgress" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /game/sessions:
+    post:
+      tags: [Игра]
+      summary: Начать игровую сессию (FR-050, FR-051)
+      description: |
+        ПРЕДЛОЖЕНИЕ: в ответе сразу приходит серия вопросов (только SINGLE_CHOICE, без эталона),
+        так как в ТЗ не описано, как клиент их получает.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [topic_id]
+              properties:
+                topic_id: { type: integer }
+                count:
+                  type: integer
+                  minimum: 1
+                  default: 10
+                  description: Сколько вопросов в серии
+      responses:
+        "201":
+          description: Сессия создана
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GameSession" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: В теме нет подходящих заданий
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /game/sessions/{id}:
+    patch:
+      tags: [Игра]
+      summary: Завершить игровую сессию (FR-055)
+      description: |
+        Сервер сам фиксирует время окончания, очки и число верных ответов (по событиям WebSocket)
+        и обновляет рекорд по теме. Клиент очки не передаёт (FR-054).
+        Тело запроса не нужно.
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Сессия завершена
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GameResult" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /users/me/statistics:
+    get:
+      tags: [Статистика]
+      summary: Статистика пользователя (FR-060, FR-061)
+      responses:
+        "200":
+          description: Статистика
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Statistics" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /health:
+    get:
+      tags: [Служебные]
+      summary: Проверка доступности (публичный метод)
+      security: []
+      responses:
+        "200":
+          description: Сервис работает
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /users/me:
+    get:
+      tags: [Пользователь (предложение)]
+      summary: Данные пользователя
+      x-proposal: true
+      description: ПРЕДЛОЖЕНИЕ. Нужен, чтобы клиент узнал, дано ли согласие на обработку ПДн (NFR-060).
+      responses:
+        "200":
+          description: Пользователь
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  consent_at:
+                    type: string
+                    format: date-time
+                    nullable: true
+                    description: Когда дано согласие; null — согласия нет
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /users/me/consent:
+    post:
+      tags: [Пользователь (предложение)]
+      summary: Дать согласие на обработку ПДн
+      x-proposal: true
+      description: ПРЕДЛОЖЕНИЕ. Записывает `User.consent_at` (NFR-060). До этого остальные методы отвечают 403.
+      responses:
+        "200":
+          description: Согласие записано
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  consent_at: { type: string, format: date-time }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT от сервиса аутентификации (FR-001)
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+
+  responses:
+    BadRequest:
+      description: Некорректный запрос
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: Токен отсутствует или недействителен
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: Нет доступа к чужим данным (FR-010; для чужих данных допускается и 404)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Объект не найден
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ValidationError:
+      description: Ошибка валидации
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ServerError:
+      description: Внутренняя ошибка сервера
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        detail: { type: string, example: описание ошибки }
+
+    Subject:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string, example: Математика }
+        has_exam_variant:
+          type: boolean
+          x-proposal: true
+          description: ПРЕДЛОЖЕНИЕ. Истина, если у предмета есть структура варианта (показывать кнопку «Вариант ЕГЭ»).
+
+    Topic:
+      type: object
+      properties:
+        id: { type: integer }
+        subject_id: { type: integer }
+        name: { type: string }
+
+    Option:
+      type: object
+      properties:
+        id: { type: string, example: a }
+        text: { type: string }
+
+    Answer:
+      type: object
+      description: Ответ пользователя на задание
+      properties:
+        answer:
+          description: Число для NUMERIC, id варианта для SINGLE_CHOICE, список id для MULTIPLE_CHOICE
+        status: { $ref: "#/components/schemas/AnswerStatus" }
+        updated_at:
+          type: string
+          format: date-time
+          description: По нему рисуется «Сохранено в ЧЧ:ММ»
+
+    AnswerStatus:
+      type: string
+      enum: [DRAFT, SAVED, FINAL]
+
+    AnswerIn:
+      type: object
+      required: [attempt_id, answer, status]
+      properties:
+        attempt_id: { type: integer }
+        answer:
+          description: Число для NUMERIC, id варианта для SINGLE_CHOICE, список id для MULTIPLE_CHOICE
+        status: { $ref: "#/components/schemas/AnswerStatus" }
+
+    AnswerSaved:
+      type: object
+      properties:
+        question_id: { type: integer }
+        status: { $ref: "#/components/schemas/AnswerStatus" }
+        updated_at: { type: string, format: date-time }
+
+    AttemptQuestion:
+      type: object
+      properties:
+        position: { type: integer, description: Номер в варианте, с 1 }
+        question_id: { type: integer }
+        text: { type: string }
+        question_type:
+          type: string
+          enum: [NUMERIC, SINGLE_CHOICE, MULTIPLE_CHOICE]
+        options:
+          type: array
+          nullable: true
+          items: { $ref: "#/components/schemas/Option" }
+        points: { type: integer }
+        answer:
+          allOf:
+            - $ref: "#/components/schemas/Answer"
+          nullable: true
+          description: null, если ответа ещё нет
+        correct_answer:
+          description: Только после завершения попытки
+        is_correct:
+          type: boolean
+          description: Только после завершения попытки
+        points_awarded:
+          type: integer
+          description: Только после завершения попытки
+
+    Attempt:
+      type: object
+      properties:
+        id: { type: integer }
+        kind:
+          type: string
+          enum: [TOPIC, EXAM]
+        subject_id: { type: integer }
+        topic_id: { type: integer, nullable: true }
+        started_at: { type: string, format: date-time }
+        finished_at: { type: string, format: date-time, nullable: true }
+        primary_score: { type: integer, nullable: true }
+        max_score: { type: integer }
+        percent:
+          type: number
+          nullable: true
+          description: Процент выполнения; null, пока попытка не завершена
+        questions:
+          type: array
+          items: { $ref: "#/components/schemas/AttemptQuestion" }
+
+    AttemptSummary:
+      type: object
+      properties:
+        id: { type: integer }
+        kind:
+          type: string
+          enum: [TOPIC, EXAM]
+        started_at: { type: string, format: date-time }
+        finished_at: { type: string, format: date-time, nullable: true }
+        primary_score: { type: integer, nullable: true }
+        max_score: { type: integer }
+        percent: { type: number, nullable: true }
+
+    Flashcard:
+      type: object
+      properties:
+        id: { type: integer }
+        front_text: { type: string }
+        back_text:
+          type: string
+          description: ПРЕДЛОЖЕНИЕ. Оборот приходит сразу, переворот делает клиент.
+        is_due:
+          type: boolean
+          x-proposal: true
+          description: ПРЕДЛОЖЕНИЕ. true, если срок повторения наступил
+
+    FlashcardList:
+      type: object
+      properties:
+        due_count:
+          type: integer
+          x-proposal: true
+          description: ПРЕДЛОЖЕНИЕ. Счётчик «к повторению»; 0 — «на сегодня всё»
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Flashcard" }
+
+    FlashcardProgress:
+      type: object
+      properties:
+        next_review: { type: string, format: date-time, nullable: true }
+        interval_days: { type: integer }
+        review_count: { type: integer }
+
+    GameQuestion:
+      type: object
+      properties:
+        question_id: { type: integer }
+        text: { type: string }
+        options:
+          type: array
+          items: { $ref: "#/components/schemas/Option" }
+
+    GameSession:
+      type: object
+      properties:
+        id: { type: integer }
+        topic_id: { type: integer }
+        started_at: { type: string, format: date-time }
+        questions:
+          type: array
+          x-proposal: true
+          items: { $ref: "#/components/schemas/GameQuestion" }
+
+    GameResult:
+      type: object
+      properties:
+        score: { type: integer }
+        correct_answers: { type: integer }
+        ended_at: { type: string, format: date-time }
+        best_score:
+          type: integer
+          description: Рекорд пользователя по теме после этой игры
+        is_record:
+          type: boolean
+          description: true, если рекорд побит
+
+    Statistics:
+      type: object
+      properties:
+        subjects:
+          type: array
+          items:
+            type: object
+            properties:
+              subject_id: { type: integer }
+              solved: { type: integer, description: Решено заданий (ответы FINAL) }
+              correct_percent: { type: number }
+              topics:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    topic_id: { type: integer }
+                    solved: { type: integer }
+                    correct_percent: { type: number }
+        game:
+          type: array
+          description: Рекорды в EGE-Rush по темам
+          items:
+            type: object
+            properties:
+              topic_id: { type: integer }
+              best_score: { type: integer }
+              last_score: { type: integer }
+
+# WebSocket /ws/game/sessions/{id} (OpenAPI его не описывает)
+#
+# Подключение с тем же JWT. ПРЕДЛОЖЕНИЕ по сообщениям (в ТЗ только общая идея, FR-054):
+#   клиент -> сервер: {"type": "answer", "question_id": 12, "option_id": "b"}
+#   сервер -> клиент: {"type": "result", "correct": true, "score": 20}
+# Клиент не передаёт очки и признак правильности. Очки считает сервер (10 за верный ответ).
