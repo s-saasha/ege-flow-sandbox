@@ -1,0 +1,158 @@
+{
+  "subject": "Информатика",
+  "variant_structure": [
+    {
+      "exam_number": 1,
+      "count": 1
+    },
+    {
+      "exam_number": 2,
+      "count": 1
+    },
+    {
+      "exam_number": 3,
+      "count": 1
+    }
+  ],
+  "questions": [
+    {
+      "topic": "Системы счисления",
+      "exam_number": 1,
+      "text": "Переведите число $101101_2$ в десятичную систему счисления.",
+      "question_type": "NUMERIC",
+      "options": null,
+      "correct_answer": 45,
+      "points": 1
+    },
+    {
+      "topic": "Кодирование информации",
+      "exam_number": 2,
+      "text": "Сообщение состоит из 50 символов алфавита мощностью 16. Каждый символ кодируется одинаковым числом бит. Сколько бит занимает сообщение?",
+      "question_type": "NUMERIC",
+      "options": null,
+      "correct_answer": 200,
+      "points": 2
+    },
+    {
+      "topic": "Программирование",
+      "exam_number": 3,
+      "text": "Чему равно значение, которое выведет программа `print(17 // 5 + 17 % 5)`?",
+      "question_type": "NUMERIC",
+      "options": null,
+      "correct_answer": 5,
+      "points": 1
+    },
+    {
+      "topic": "Кодирование информации",
+      "exam_number": 2,
+      "text": "Сколько различных символов можно закодировать с помощью 6 бит?",
+      "question_type": "SINGLE_CHOICE",
+      "options": [
+        {
+          "id": "a",
+          "text": "$12$"
+        },
+        {
+          "id": "b",
+          "text": "$36$"
+        },
+        {
+          "id": "c",
+          "text": "$64$"
+        },
+        {
+          "id": "d",
+          "text": "$128$"
+        }
+      ],
+      "correct_answer": "c",
+      "points": 1
+    },
+    {
+      "topic": "Программирование",
+      "exam_number": null,
+      "text": "Чему равно значение выражения `7 % 3` в Python?",
+      "question_type": "SINGLE_CHOICE",
+      "options": [
+        {
+          "id": "a",
+          "text": "$0$"
+        },
+        {
+          "id": "b",
+          "text": "$1$"
+        },
+        {
+          "id": "c",
+          "text": "$2$"
+        },
+        {
+          "id": "d",
+          "text": "$3$"
+        }
+      ],
+      "correct_answer": "b",
+      "points": 1
+    },
+    {
+      "topic": "Системы счисления",
+      "exam_number": null,
+      "text": "Выберите все числа, двоичная запись которых содержит ровно три единицы.",
+      "question_type": "MULTIPLE_CHOICE",
+      "options": [
+        {
+          "id": "a",
+          "text": "$7$"
+        },
+        {
+          "id": "b",
+          "text": "$11$"
+        },
+        {
+          "id": "c",
+          "text": "$12$"
+        },
+        {
+          "id": "d",
+          "text": "$13$"
+        }
+      ],
+      "correct_answer": [
+        "a",
+        "b",
+        "d"
+      ],
+      "points": 2
+    },
+    {
+      "topic": "Программирование",
+      "exam_number": null,
+      "text": "Выберите все истинные выражения в Python.",
+      "question_type": "MULTIPLE_CHOICE",
+      "options": [
+        {
+          "id": "a",
+          "text": "`5 > 3`"
+        },
+        {
+          "id": "b",
+          "text": "`10 % 2 == 1`"
+        },
+        {
+          "id": "c",
+          "text": "`len(\"abc\") == 3`"
+        },
+        {
+          "id": "d",
+          "text": "`2 ** 3 == 8`"
+        }
+      ],
+      "correct_answer": [
+        "a",
+        "c",
+        "d"
+      ],
+      "points": 1
+    }
+  ]
+}

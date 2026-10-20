@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Файл с контентом одного предмета (seed)",
+  "type": "object",
+  "required": ["subject", "variant_structure", "questions"],
+  "properties": {
+    "subject": { "type": "string", "description": "Название предмета, Subject.name" },
+    "variant_structure": {
+      "type": "array",
+      "description": "Структура варианта ЕГЭ, Subject.variant_structure",
+      "items": {
+        "type": "object",
+        "required": ["exam_number", "count"],
+        "properties": {
+          "exam_number": { "type": "integer", "minimum": 1 },
+          "count": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/question" }
+    }
+  },
+  "$defs": {
+    "question": {
+      "type": "object",
+      "required": ["topic", "exam_number", "text", "question_type", "correct_answer", "points"],
+      "properties": {
+        "topic": { "type": "string", "description": "Название темы, Topic.name" },
+        "exam_number": { "type": ["integer", "null"], "description": "Номер задания в варианте ЕГЭ или null" },
+        "text": { "type": "string", "description": "Условие. Формулы в LaTeX между знаками $, код в обратных кавычках" },
+        "question_type": { "enum": ["NUMERIC", "SINGLE_CHOICE", "MULTIPLE_CHOICE"] },
+        "options": {
+          "type": ["array", "null"],
+          "description": "Варианты ответа. Для NUMERIC — null",
+          "items": {
+            "type": "object",
+            "required": ["id", "text"],
+            "properties": {
+              "id": { "type": "string" },
+              "text": { "type": "string" }
+            }
+          }
+        },
+        "correct_answer": {
+          "description": "NUMERIC — число; SINGLE_CHOICE — id варианта; MULTIPLE_CHOICE — список id"
+        },
+        "points": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}
