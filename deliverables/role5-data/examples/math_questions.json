@@ -1,0 +1,160 @@
+{
+  "subject": "Математика",
+  "variant_structure": [
+    {
+      "exam_number": 1,
+      "count": 1
+    },
+    {
+      "exam_number": 2,
+      "count": 1
+    },
+    {
+      "exam_number": 3,
+      "count": 1
+    },
+    {
+      "exam_number": 4,
+      "count": 1
+    }
+  ],
+  "questions": [
+    {
+      "topic": "Уравнения",
+      "exam_number": 1,
+      "text": "Решите уравнение $2x + 7 = 1$.",
+      "question_type": "NUMERIC",
+      "options": null,
+      "correct_answer": -3,
+      "points": 1
+    },
+    {
+      "topic": "Производная",
+      "exam_number": 2,
+      "text": "Найдите значение производной функции $f(x) = x^3 - 2x$ в точке $x_0 = 2$.",
+      "question_type": "NUMERIC",
+      "options": null,
+      "correct_answer": 10,
+      "points": 2
+    },
+    {
+      "topic": "Вероятность",
+      "exam_number": 3,
+      "text": "Симметричную монету бросают два раза. Найдите вероятность того, что орёл выпадет ровно один раз.",
+      "question_type": "NUMERIC",
+      "options": null,
+      "correct_answer": 0.5,
+      "points": 1
+    },
+    {
+      "topic": "Уравнения",
+      "exam_number": 4,
+      "text": "Какое из чисел является корнем уравнения $x^2 - 5x + 6 = 0$?",
+      "question_type": "SINGLE_CHOICE",
+      "options": [
+        {
+          "id": "a",
+          "text": "$1$"
+        },
+        {
+          "id": "b",
+          "text": "$4$"
+        },
+        {
+          "id": "c",
+          "text": "$3$"
+        },
+        {
+          "id": "d",
+          "text": "$5$"
+        }
+      ],
+      "correct_answer": "c",
+      "points": 1
+    },
+    {
+      "topic": "Функции",
+      "exam_number": 4,
+      "text": "Какая из функций возрастает на всей числовой прямой?",
+      "question_type": "SINGLE_CHOICE",
+      "options": [
+        {
+          "id": "a",
+          "text": "$y = x^2$"
+        },
+        {
+          "id": "b",
+          "text": "$y = -3x + 1$"
+        },
+        {
+          "id": "c",
+          "text": "$y = 2x + 5$"
+        },
+        {
+          "id": "d",
+          "text": "$y = |x|$"
+        }
+      ],
+      "correct_answer": "c",
+      "points": 1
+    },
+    {
+      "topic": "Функции",
+      "exam_number": null,
+      "text": "Выберите все чётные функции.",
+      "question_type": "MULTIPLE_CHOICE",
+      "options": [
+        {
+          "id": "a",
+          "text": "$y = x^2$"
+        },
+        {
+          "id": "b",
+          "text": "$y = x^3$"
+        },
+        {
+          "id": "c",
+          "text": "$y = |x|$"
+        },
+        {
+          "id": "d",
+          "text": "$y = x + 1$"
+        }
+      ],
+      "correct_answer": [
+        "a",
+        "c"
+      ],
+      "points": 2
+    },
+    {
+      "topic": "Числа",
+      "exam_number": null,
+      "text": "Выберите все простые числа.",
+      "question_type": "MULTIPLE_CHOICE",
+      "options": [
+        {
+          "id": "a",
+          "text": "$21$"
+        },
+        {
+          "id": "b",
+          "text": "$23$"
+        },
+        {
+          "id": "c",
+          "text": "$27$"
+        },
+        {
+          "id": "d",
+          "text": "$29$"
+        }
+      ],
+      "correct_answer": [
+        "b",
+        "d"
+      ],
+      "points": 1
+    }
+  ]
+}
